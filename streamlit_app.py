@@ -13,7 +13,7 @@ meny = st.radio(
     "Välj funktion:", 
     [
         "1. Kapacitet & Vent-koll (BBR)", 
-        "2. Ombyggnad & Nyckeltal (Kalkylator)", 
+        "2. Ombyggnad & Fritextkalkylator", 
         "3. BBR & Regelverk Uppslagsverk", 
         "4. Intelligent Fritextsök (Lagkoppling)"
     ]
@@ -62,57 +62,55 @@ if meny == "1. Kapacitet & Vent-koll (BBR)":
             st.error("❌ Trängselrisk")
 
 # ==========================================
-# DEL 2: OMBYGGNAD & NYCKELTAL
+# DEL 2: OMBYGGNAD & FRITEXTKALKYLATOR (NY!)
 # ==========================================
-elif meny == "2. Ombyggnad & Nyckeltal (Kalkylator)":
-    st.header("🛠️ Kalkylator för ombyggnation & åtgärder")
-    st.markdown("Beräkna riktpriser inklusive lagkrav, montage och uppdatering av relationshandlingar.")
+elif meny == "2. Ombyggnad & Fritextkalkylator":
+    st.header("🛠️ Fritextkalkylator för ombyggnation")
+    st.markdown("Beskriv vad som ska göras i fritext. Appen tolkar åtgärden, matchar nyckeltal och beräknar riktpris inklusive lagkrav och relationshandlingar.")
 
-    atgard_typ = st.selectbox(
-        "Välj typ av åtgärd / projekt:",
-        [
-            "Byte av innerdörr (med brand-/ljudkrav)",
-            "Påfyllnad & sanering av lekplatssand (Sandlåda)",
-            "Mindre ytanpassning / Väggflytt (per m²)",
-            "Installera tilluftsdon / Vent-anpassning"
-        ]
+    projekt_beskrivning = st.text_area(
+        "Beskriv projektet (t.ex. 'Byta 2 dörrar med brandkrav' eller 'Fyll på sandlåda 6 kubik'):",
+        placeholder="Skriv vad som ska utföras här..."
     )
 
     st.divider()
 
-    if "innerdörr" in atgard_typ.lower():
-        antal_dorrar = st.number_input("Antal dörrar som ska bytas", min_value=1, value=1, step=1)
-        brandklass = st.checkbox("Krav på brandklass (EI30 / EI60) & ljudklass", value=True)
-        styckpris = 18000 if brandklass else 12000
-        grund_matris = antal_dorrar * styckpris
-        
-    elif "sandlåda" in atgard_typ.lower():
-        volym_m3 = st.number_input("Uppskattad volym lekplatssand / påfyllnad (m³)", min_value=1.0, value=5.0, step=0.5)
-        styckpris = 2500 
-        grund_matris = volym_m3 * styckpris
-        
-    elif "ytanpassning" in atgard_typ.lower():
-        ombyggnad_yta = st.number_input("Berörd golvarea för anpassningen (m²)", min_value=5.0, value=30.0, step=5.0)
-        styckpris = 2500 
-        grund_matris = ombyggnad_yta * styckpris
-        
-    else:
-        antal_don = st.number_input("Antal nya/flyttade don", min_value=1, value=2, step=1)
-        styckpris = 6500 
-        grund_matris = antal_don * styckpris
+    # Automatiskt tolkning av fritexten för att sätta baspris
+    txt = projekt_beskrivning.lower()
+    grund_matris = 15000  # Standardstart om ej matchat
+    kategori_vald = "Generell åtgärd / Blandade anpassningar"
 
+    if any(w in txt for w in ["dörr", "dörrar", "port"]):
+        kategori_vald = "Byte av innerdörr(ar) med brand-/ljudkrav"
+        grund_matris = 18000 * 2  # Schablon
+    elif any(w in txt for w in ["sand", "sandlåda", "lekplats"]):
+        kategori_vald = "Lekplats / Sandlåda (påfyllnad & sanering)"
+        grund_matris = 2500 * 5   # Schablon 5 m3
+    elif any(w in txt for w in ["vägg", "yta", "rum", "klassrum", "anpassning", "m2", "kvadratmeter"]):
+        kategori_vald = "Ytanpassning / Väggflytt / Ytskikt"
+        grund_matris = 2500 * 30  # Schablon 30 m2
+    elif any(w in txt for w in ["luft", "ventilation", "don", "aggregat"]):
+        kategori_vald = "Ventilationsanpassning / Tilluftsdon"
+        grund_matris = 6500 * 2
+
+    st.info(f"🔍 **Tolkat projekt:** {kategori_vald}")
+
+    # Tillägg för relationshandlingar & projektledning
     inkl_relationshandlingar = st.checkbox("Inkludera uppdatering av relationshandlingar (CAD/BIM, OVK-rev, brandritning)", value=True)
-    kostnad_relationshandlingar = 4500 if inkl_relationshandlingar else 0
-    projektering_ovrigt = grund_matris * 0.10 
     
+    kostnad_relationshandlingar = 4500 if inkl_relationshandlingar else 0
+    projektering_ovrigt = grund_matris * 0.10  # 10% samordning
     total_kostnad = grund_matris + kostnad_relationshandlingar + projektering_ovrigt
 
     st.subheader("💰 Kostnadssammanställning (Induktiv riktprisbudget):")
+    
     col1, col2 = st.columns(2)
     with col1:
         st.metric("Direkt arb./material", f"{grund_matris:,.0f} kr".replace(",", " "))
         if inkl_relationshandlingar:
             st.write("📁 **Relationshandlingar:** 4 500 kr")
+        else:
+            st.write("📁 **Relationshandlingar:** Ej valda")
     with col2:
         st.metric("Uppskattat totalpris", f"{total_kostnad:,.0f} kr".replace(",", " "))
         st.caption("Inkl. samordning & uppdaterade handlingar.")
@@ -129,48 +127,51 @@ elif meny == "3. BBR & Regelverk Uppslagsverk":
 # ==========================================
 elif meny == "4. Intelligent Fritextsök (Lagkoppling)":
     st.header("🔍 Intelligent Fritextsök & Regeltolk")
-    st.markdown("Skriv en egen fråga (t.ex. *'vilka krav ställs på ventilationen i klassrum'* eller *'vad gäller för buller och innemiljö'*):")
+    st.markdown("Ställ en specifik fråga (t.ex. *'vad är lägsta takhöjd i en skola'*, *'brandskydd utöver bbr'* eller *'ventilation'**):")
 
     fritext = st.text_area("Din fråga eller beskrivning av ärendet:")
 
     if st.button("Analysera och koppla krav"):
         if len(fritext) > 3:
             s_text = fritext.lower()
-            st.success("Analys klar! Koppling till gällande lagar och myndigheter:")
+            st.success("Analys klar! Exakt koppling till gällande regelverk och myndigheter:")
 
             matchningar = []
 
-            ord_luft = ["luft", "ventilation", "koldioxid", "flöde", "ovk", "takhöjd", "volym", "rumshöjd"]
-            if any(w in s_text for w in ord_luft):
+            if any(w in s_text for w in ["takhöjd", "rumshöjd", "höjd", "yta", "m2", "kvadratmeter", "fri höjd"]):
                 matchningar.append({
-                    "lag": "Boverkets Byggregler (BBR)",
-                    "fokus": "Byggnadstekniska krav på innemiljö, uteluftsflöden (minst 0,35 l/s m² + 7 l/s per person) och rumshöjder."
+                    "lag": "Boverkets Byggregler (BBR) / Boverket",
+                    "fokus": "Reglerar rumshöjder, volymer och utformning av vistelserum. För skolor rekommenderas en fri takhöjd på minst 2,4 - 2,7 meter."
                 })
 
-            ord_miljö = ["miljö", "hälsa", "buller", "ljud", "temperatur", "drag", "mögel", "fukt", "allergi", "städa", "renlighet"]
-            if any(w in s_text for w in ord_miljö):
+            if any(w in s_text for w in ["luft", "ventilation", "koldioxid", "flöde", "ovk", "l/s", "drag"]):
                 matchningar.append({
-                    "lag": "Miljöbalken (9 kap. - Hälsoskydd)",
-                    "fokus": "Tillsynas av Miljöförvaltningen. Kräver att skollokaler inte medför olägenhet för människors hälsa (ljudnivåer, termiskt anpassat inneklimat och ventilation)."
+                    "lag": "BBR & Miljöbalken (Miljöförvaltningen)",
+                    "fokus": "Ställer tekniska krav på lägsta uteluftsflöden (minst 0,35 l/s per m² + 7 l/s per person). Miljöförvaltningen utövar tillsyn över innemiljön."
                 })
 
-            ord_skol = ["trygg", "säkerhet", "kränkning", "ansvar", "skolmiljö", "elev", "förskola"]
-            if any(w in s_text for w in ord_skol):
+            if any(w in s_text for w in ["brand", "brandskydd", "utrymning", "brandcell", "utrymningsväg", "sprinkler", "brandlarm", "branddörr"]):
                 matchningar.append({
-                    "lag": "Skollagen (2010:800 - 4 kap.)",
-                    "fokus": "Ställer krav på att utbildningen bedrivs i en trygg miljö och att lokaler är ändamålsenliga för verksamheten."
+                    "lag": "Lagen om skydd mot olyckor (MSO) & MSB / Räddningstjänsten",
+                    "fokus": "Utöver BBR:s grundläggande brandkrav ställer Räddningstjänsten krav på systematiskt brandskyddsarbete (SBA) och fria utrymningsvägar."
+                })
+
+            if any(w in s_text for w in ["skollag", "skolverket", "trygghet", "studiero", "elev", "förskola", "skola"]):
+                matchningar.append({
+                    "lag": "Skollagen (2010:800) / Skolverket",
+                    "fokus": "Reglerar verksamhetens ansvar för att lokaler är ändamålsenliga och att elever garanteras en trygg och säker skolmiljö."
                 })
 
             if not matchningar:
                 matchningar.append({
-                    "lag": "Samlad bedömning (BBR, Miljöbalken & Skollagen)",
-                    "fokus": "Ärendet berör både fastighetens tekniska utformning (BBR) och verksamhetens egenkontroll (Miljöförvaltningen och Skollagen)."
+                    "lag": "Allmän fastighets- och myndighetsbedömning",
+                    "fokus": "Frågan rör fastighetsförvaltning. Specificera om det avser ventilation, brand eller utformning."
                 })
 
             for m in matchningar:
-                with st.expander(f"📌 Kopplat regelverk: {m['lag']}", expanded=True):
-                    st.write(f"**Innehåll & Krav:** {m['fokus']}")
-                    st.markdown("- *Rekommendation:* Kontrollera alltid mot fastighetens senaste OVK-protokoll och samråd med miljöförvaltningen vid större lokaländringar.")
+                with st.expander(f"📌 Ansvarig myndighet & Regelverk: {m['lag']}", expanded=True):
+                    st.write(f"**Kravbild & Innehåll:** {m['fokus']}")
+                    st.markdown("- *Online-hänvisning:* Kontrollera alltid Boverkets, Skolverkets eller lokal miljö-/räddningsförvaltningens gällande föreskrifter.")
 
         else:
-            st.warning("Skriv en lite fylligare fråga så att systemet kan göra en korrekt regeltolkning.")
+            st.warning("Skriv en lite fylligare fråga.")
