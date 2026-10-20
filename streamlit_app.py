@@ -62,44 +62,53 @@ if meny == "1. Kapacitet & Vent-koll (BBR)":
             st.error("❌ Trängselrisk")
 
 # ==========================================
-# DEL 2: OMBYGGNAD & FRITEXTKALKYLATOR (NY!)
+# DEL 2: OMBYGGNAD & FRITEXTKALKYLATOR
 # ==========================================
 elif meny == "2. Ombyggnad & Fritextkalkylator":
     st.header("🛠️ Fritextkalkylator för ombyggnation")
-    st.markdown("Beskriv vad som ska göras i fritext. Appen tolkar åtgärden, matchar nyckeltal och beräknar riktpris inklusive lagkrav och relationshandlingar.")
+    st.markdown("Beskriv projektet i fritext. Appen känner av om det är dörrbyte (inga relationshandlingar krävs) eller rumsbygge/väggflytt (kräver uppdatering av brand-, vent- och bygghandlingar).")
 
     projekt_beskrivning = st.text_area(
-        "Beskriv projektet (t.ex. 'Byta 2 dörrar med brandkrav' eller 'Fyll på sandlåda 6 kubik'):",
-        placeholder="Skriv vad som ska utföras här..."
+        "Beskriv projektet:",
+        placeholder="T.ex. 'Byta 4 st klassrumsdörrar' eller 'Bygga nya rum och flytta väggar'..."
     )
 
     st.divider()
 
-    # Automatiskt tolkning av fritexten för att sätta baspris
     txt = projekt_beskrivning.lower()
-    grund_matris = 15000  # Standardstart om ej matchat
-    kategori_vald = "Generell åtgärd / Blandade anpassningar"
+    
+    # Detektera om det är dörrbyte eller nya rum/väggar
+    ar_dorrbyte = any(w in txt for w in ["dörr", "dörrar", "port"])
+    ar_nytt_rum = any(w in txt for w in ["nytt rum", "nya rum", "vägg", "väggar", "flytta", "rivar", "planlösning"])
 
-    if any(w in txt for w in ["dörr", "dörrar", "port"]):
+    if ar_dorrbyte:
         kategori_vald = "Byte av innerdörr(ar) med brand-/ljudkrav"
-        grund_matris = 18000 * 2  # Schablon
+        grund_matris = 18000 * 4 if "4" in txt else 18000 * 2  # Schablon per dörr
+        krav_relationshandlingar = False  # Behövs ej vid rent dörrbyte
+    elif ar_nytt_rum:
+        kategori_vald = "Bygga nya rum / Väggflytt / Planlösning"
+        grund_matris = 3500 * 40  # Schablon för rumsbygge per m2
+        krav_relationshandlingar = True   # Krävs ovillkorligen
     elif any(w in txt for w in ["sand", "sandlåda", "lekplats"]):
         kategori_vald = "Lekplats / Sandlåda (påfyllnad & sanering)"
-        grund_matris = 2500 * 5   # Schablon 5 m3
-    elif any(w in txt for w in ["vägg", "yta", "rum", "klassrum", "anpassning", "m2", "kvadratmeter"]):
-        kategori_vald = "Ytanpassning / Väggflytt / Ytskikt"
-        grund_matris = 2500 * 30  # Schablon 30 m2
-    elif any(w in txt for w in ["luft", "ventilation", "don", "aggregat"]):
-        kategori_vald = "Ventilationsanpassning / Tilluftsdon"
-        grund_matris = 6500 * 2
+        grund_matris = 2500 * 5
+        krav_relationshandlingar = False
+    else:
+        kategori_vald = "Generell lokalåtgärd"
+        grund_matris = 20000
+        krav_relationshandlingar = False
 
     st.info(f"🔍 **Tolkat projekt:** {kategori_vald}")
 
-    # Tillägg för relationshandlingar & projektledning
-    inkl_relationshandlingar = st.checkbox("Inkludera uppdatering av relationshandlingar (CAD/BIM, OVK-rev, brandritning)", value=True)
-    
-    kostnad_relationshandlingar = 4500 if inkl_relationshandlingar else 0
-    projektering_ovrigt = grund_matris * 0.10  # 10% samordning
+    # Prissättning av relationshandlingar baserat på projektart
+    if krav_relationshandlingar:
+        st.warning("📁 **Notering:** Eftersom projektet berör rumsindelning/väggar krävs uppdaterade relationshandlingar för ventilation (OVK-rev), brandtekniska ritningar och bygghandlingar.")
+        kostnad_relationshandlingar = 7500  # Omfattande handlingar för nya rum
+    else:
+        st.success("✅ **Notering:** Vid rent dörrbyte eller underhåll behövs inga uppdaterade relationshandlingar.")
+        kostnad_relationshandlingar = 0
+
+    projektering_ovrigt = grund_matris * 0.10  # Samordning
     total_kostnad = grund_matris + kostnad_relationshandlingar + projektering_ovrigt
 
     st.subheader("💰 Kostnadssammanställning (Induktiv riktprisbudget):")
@@ -107,13 +116,10 @@ elif meny == "2. Ombyggnad & Fritextkalkylator":
     col1, col2 = st.columns(2)
     with col1:
         st.metric("Direkt arb./material", f"{grund_matris:,.0f} kr".replace(",", " "))
-        if inkl_relationshandlingar:
-            st.write("📁 **Relationshandlingar:** 4 500 kr")
-        else:
-            st.write("📁 **Relationshandlingar:** Ej valda")
+        st.write(f"📁 **Relationshandlingar:** {kostnad_relationshandlingar:,.0f} kr".replace(",", " "))
     with col2:
         st.metric("Uppskattat totalpris", f"{total_kostnad:,.0f} kr".replace(",", " "))
-        st.caption("Inkl. samordning & uppdaterade handlingar.")
+        st.caption("Inkl. schablon och samordning.")
 
 # ==========================================
 # DEL 3: UPPSLAGSVERK
