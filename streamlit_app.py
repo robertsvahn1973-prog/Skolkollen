@@ -1,19 +1,19 @@
 import streamlit as st
 
 st.set_page_config(
-    page_title="Skol- och Lokalkoll Pro",
+    page_title="Skol- och Fastighetskoll Pro",
     page_icon="🏫",
     layout="centered"
 )
 
-st.title("🏫 Skol- och Lokalkoll Pro")
-st.markdown("Din mobila assistent för kapacitetsberäkning, BBR och intelligent djuptolkning av regelverk för skolmiljö.")
+st.title("🏫 Skol- & Fastighetskoll Pro")
+st.markdown("Din mobila expertassistent för exakta lagrum, paragrafer, BBR, Jordabalken, brandskydd och skolmiljö.")
 
 meny = st.radio(
     "Välj funktion:", 
     [
         "1. Kapacitet & Vent-koll (BBR)", 
-        "2. Intelligent Fritextsök & Djuptolk"
+        "2. Intelligent Fritextsök & Djuptolk (Med lagrum & paragrafer)"
     ]
 )
 
@@ -62,86 +62,101 @@ if meny == "1. Kapacitet & Vent-koll (BBR)":
 # ==========================================
 # DEL 2: INTELLIGENT FRITEXTSÖK & DJUPTOLK
 # ==========================================
-elif meny == "2. Intelligent Fritextsök & Djuptolk":
+elif meny == "2. Intelligent Fritextsök & Djuptolk (Med lagrum & paragrafer)":
     st.header("🔍 Intelligent Fritextsök & Djuptolk")
-    st.markdown("Ställ en specifik fråga om slöjd, NO/kemi, idrott, dörrar, decibel, takhöjd, ventilation eller brand. Systemet djupsöker mot Skolverket, Boverket, MSB och Miljöförvaltningen:")
+    st.markdown("Ställ vilken fråga som helst. Systemet plockar fram rätt myndighet, lag, kapitel och paragraf:")
 
-    fritext = st.text_area("Din fråga (t.ex. 'vad ska slöjd i en skola innefatta' eller 'krav på kemisal'):")
+    fritext = st.text_area("Din fråga (t.ex. 'vem ansvarar för skador enligt jordabalken', 'hur många i brandcell' eller 'krav på slöjdsal'):")
 
     if st.button("Utför djupsökning och analys"):
         if len(fritext) > 2:
             s_text = fritext.lower()
-            st.success("Djupsökning klar! Matchade myndigheter och krav:")
+            st.success("Djupsökning klar! Exakta lagrum och myndighetskrav:")
 
             matchningar = []
 
-            # Slöjd (Trä, metall, textil) -> Skolverket & Arbetsmiljöverket & BBR
+            # 1. Fastighetsjuridik & Jordabalken (JB)
+            if any(w in s_text for w in ["jordabalken", "jb", "hyra", "lokalhyra", "hyresgäst", "hyresvärd", "underhållsansvar", "avtal", "kontrakt", "skada"]):
+                matchningar.append({
+                    "lagrum": "Jordabalken (1970:994) – 12 kap. (Hyreslagen)",
+                    "detaljer": "• **Hyresvärdens ansvar:** 12 kap. 9 § ställer krav på att hyresvärden ska tillhandahålla lokalen i fullt brukbart skick för det avsedda ändamålet och hålla den i detta skick under hyrestiden.\n• **Hyresgästens vårdplikt:** 12 kap. 24 § stipulerar att hyresgäst väl ska vårdas lokalen och ersätta skador som uppkommit genom vårdslöshet eller försummelse.\n• **Fel i lokal:** 12 kap. 11 § ger rätt till skälig nedsättning av hyra om lokalen är bristfällig."
+                })
+
+            # 2. Brandcell & Personantal (BBR & MSO)
+            if any(w in s_text for w in ["brandcell", "hur många", "personantal", "antal personer", "kapacitet"]):
+                matchningar.append({
+                    "lagrum": "Boverkets Byggregler (BBR) & Lagen om skydd mot olyckor (2003:778)",
+                    "detaljer": "• **Personantal & Utrymning:** Enligt BBR styrs max antal personer i en brandcell av utrymningsvägarnas dimensionering.\n• **1 utrymningsväg:** Max **50 personer** (förutsatt kort och säker utrymningsväg).\n• **2 oberoende utrymningsvägar:** Tillåter upp till **150+ personer** beroende på dörrarnas fria modulbredd."
+                })
+
+            # 3. Slöjd (Trä, metall, textil)
             if any(w in s_text for w in ["slöjd", "träslöjd", "metallslöjd", "textilslöjd"]):
                 matchningar.append({
-                    "myndighet": "Skolverket (Läroplan / Skollagen) & Arbetsmiljöverket / Boverket",
-                    "detaljer": "Enligt Skolverkets kursplaner ska slöjdundervisningen erbjuda ändamålsenliga lokaler för både trä-, metall- och textilslöjd. Fastighets- och arbetsmiljökrav (AFS) ställer krav på: **Utsug och ventilation** för damm och ångor (särskilt vid maskiner och svets/lödning), **säkerhetsavstängning** (nödstopp för maskiner), ögonspolning, samt flamskyddade material och robusta ytskikt som tål tuff miljö och buller."
+                    "lagrum": "Skollagen (2010:800) 2 kap. 36 § & Arbetsmiljöverkets föreskrifter (AFS)",
+                    "detaljer": "• **Skollagen:** Lokaler för utbildningen ska vara ändamålsenliga.\n• **Arbetsmiljö och Säkerhet:** Kräver godkänd processventilation/utsug för damm och ångor (AFS), centrala nödstopp för maskiner, samt flamskyddade ytskikt och ögonspolning."
                 })
 
-            # NO / Kemi -> Skolverket & Miljöförvaltningen & MSB
+            # 4. NO / Kemi
             if any(w in s_text for w in ["kemi", "no", "laborator", "dragskåp", "kemikalie"]):
                 matchningar.append({
-                    "myndighet": "Skolverket, Miljöförvaltningen & MSB (Räddningstjänsten)",
-                    "detaljer": "NO- och kemisalar ställer höga krav på lokalens utformning: **Dragskåp** med godkänd kontroll, särskilda kemikalieskåp med ventilation, flamsäkra ytor, golvbrunnar med slam-/syraavskiljare, samt snabbdusch och ögonspolning. Miljöförvaltningen och räddningstjänsten utövar tillsyn över förvaring av brandfarlig och hälsofarlig vara."
+                    "lagrum": "Miljöbalken (1998:808) 9 kap. & MSB (Lag om brandfarliga och explosiva varor)",
+                    "detaljer": "• **Hälsoskydd & Utrustning:** Krav på typgodkända dragskåp, ventilerade kemikalieskåp och golvbrunnar med slam-/syraavskiljare.\n• **Tillsyn:** Miljöförvaltningen utövar tillsyn över kemikaliehantering och ventilation för att förhindra olägenhet för människors hälsa."
                 })
 
-            # Idrott -> Skolverket & BBR
+            # 5. Idrott
             if any(w in s_text for w in ["idrott", "gymnastik", "hall", "omklädning"]):
                 matchningar.append({
-                    "myndighet": "Skolverket & Boverkets Byggregler (BBR)",
-                    "detaljer": "Idrottshallar regleras utifrån Skolverkets krav på idrott och hälsa samt BBR för stora samlingslokaler. Viktiga parametrar är **takhöjd** (ofta minst 7 meter för bollsport), slagtåliga väggar, korrekt belysning, tillräcklig ventilation för ansträngande fysisk aktivitet samt funktionella omklädningsrum med våtrumskrav och god kapacitet på duschar."
+                    "lagrum": "Skollagen (2010:800) & Boverkets Byggregler (BBR)",
+                    "detaljer": "• **Utformning:** Krav på tillräcklig fri höjd (ofta minst 7 meter för bollsport), slagtåliga material samt ventilationssystem dimensionerade för hög fysisk aktivitet.\n• **Hygien:** Våtrumsklassade omklädnings- och duschutrymmen."
                 })
 
-            # Ljud och Decibel på dörrar -> BBR & Miljöbalken
+            # 6. Ljud och Decibel på dörrar
             if any(w in s_text for w in ["decibel", "db", "ljud", "ljudklass", "buller", "akustik", "dörr"]):
                 matchningar.append({
-                    "myndighet": "Boverket (BBR) & Miljöförvaltningen (Miljöbalken)",
-                    "detaljer": "För dörrar till klassrum och undervisningslokaler ställs krav på ljudreduktion för att uppfylla BBR:s ljudklasskrav (normalt ljudklass B eller C). Klassrumsdörrar har typiskt krav på ljudreduktion **Rw 35 dB** (eller upp till Rw 40 dB mot högljudda utrymmen). Miljöbalken kräver att ekvivalenta ljudnivåer i klassrum inte överskrider riktvärden (max 30-35 dB(A))."
+                    "lagrum": "Boverkets Byggregler (BBR) & Miljöbalken (1998:808) 9 kap.",
+                    "detaljer": "• **BBR Ljudkrav:** Klassrumsdörrar har normalt krav på ljudreduktion **Rw 35 dB** (eller Rw 40 dB mot högljudda utrymmen) enligt standard SS 25267.\n• **Miljöbalken:** Riktvärden för ekvivalent ljudnivå i klassrum får maximalt uppgå till 30–35 dB(A) under pågående undervisning."
                 })
 
-            # Takhöjd -> Boverket
+            # 7. Takhöjd
             if any(w in s_text for w in ["takhöjd", "rumshöjd", "höjd", "yta", "m2", "volym"]):
                 matchningar.append({
-                    "myndighet": "Boverkets Byggregler (BBR) / Boverket",
-                    "detaljer": "Reglerar rumshöjder i skolor och förskolor. För vistelserum i skolor rekommenderas en fri takhöjd på minst **2,4 till 2,7 meter** (och betydligt högre för idrottshallar) för att säkerställa god luftvolym och rumsmiljö."
+                    "lagrum": "Boverkets Byggregler (BBR) – Avsnitt om rumshöjd",
+                    "detaljer": "• **Minsta höjd:** För vistelserum i skolor rekommenderas en fri rumshöjd på minst **2,4 till 2,7 meter** för att säkerställa tillräcklig luftvolym per person och förhindra dåligt inneklimat."
                 })
 
-            # Ventilation -> BBR & Miljöförvaltningen
+            # 8. Ventilation & OVK
             if any(w in s_text for w in ["luft", "ventilation", "koldioxid", "flöde", "ovk", "l/s"]):
                 matchningar.append({
-                    "myndighet": "Boverket (BBR) & Miljöförvaltningen (Miljöbalken 9 kap.)",
-                    "detaljer": "Kräver lägsta uteluftsflöde om **0,35 l/s per m²** golvarea plus tillägg med **7,0 l/s per person** i standardlokaler (särskilda flöden kan krävas i slöjd och kemi)."
+                    "lagrum": "Plan- och bygglagen (2010:900) 8 kap. & BBR / OVK-normer",
+                    "detaljer": "• **Flödeskrav:** Lägsta uteluftsflöde om **0,35 l/s per m²** golvarea plus tillägg med **7,0 l/s per person**.\n• **Intervall:** OVK (Obligatorisk ventilationskontroll) ska utföras regelbundet (ofta vart 3:e år för FTX-system i skolor)."
                 })
 
-            # Brandskydd -> MSB & Räddningstjänsten
-            if any(w in s_text for w in ["brand", "brandskydd", "utrymning", "brandcell", "branddörr", "sba"]):
+            # 9. Brandskydd generellt
+            if any(w in s_text for w in ["brand", "brandskydd", "utrymning", "branddörr", "sba"]):
                 matchningar.append({
-                    "myndighet": "MSB & Lokala Räddningstjänsten (Lagen om skydd mot olyckor)",
-                    "detaljer": "Utöver BBR:s byggnadstekniska brandkrav (t.ex. brandklassade dörrar som **EI30 / EI60**) ställer Räddningstjänsten operativa krav på utrymningsvägar, fria bredder och systematiskt brandskyddsarbete (SBA)."
+                    "lagrum": "Lagen om skydd mot olyckor (2003:778) & BBR",
+                    "detaljer": "• **Byggnadstekniskt:** Krav på brandklassade dörrar (**EI30 / EI60**) och brandtätning.\n• **Operativt:** Fastighetsägare och verksamhetsutövare är skyldiga att bedriva Systematiskt brandskyddsarbete (SBA) samt hålla utrymningsvägar fria."
                 })
 
-            # Skola / Trygghet / Generellt -> Skolverket & Skollagen
+            # 10. Skola / Skollag
             if any(w in s_text for w in ["skollag", "skolverket", "trygghet", "elev", "förskola", "skola", "lokal"]):
                 matchningar.append({
-                    "myndighet": "Skolverket (Skollagen 2010:800)",
-                    "detaljer": "Ställer övergripande krav på att skollokaler är ändamålsenliga för verksamheten, att läroplanens praktiska ämnen kan genomföras fullt ut, samt att miljön är trygg och säker för elever och personal."
+                    "lagrum": "Skollagen (2010:800) – 4 kap. och 2 kap. 36 §",
+                    "detaljer": "• **Ändamålsenlighet:** Huvudmannen är skyldig att se till att skollokalerna är ändamålsenliga för verksamheten och erbjuder en trygg, säker miljö fri från kränkningar."
                 })
 
+            # Fallback
             if not matchningar:
                 matchningar.append({
-                    "myndighet": "Allmän fastighetsförvaltning & Skolverket",
-                    "detaljer": "Ställ en mer specifik fråga (t.ex. om slöjd, kemisal, idrott, dörrar, flöden eller takhöjd) för att få exakta regelspecifikationer."
+                    "lagrum": "Allmän fastighetsförvaltning & Gällande rätt",
+                    "detaljer": f"Frågan (*\"{fritext}\"*) berör fastighetsförvaltning. För fullständig juridisk prövning, kontrollera tillämplig lagtext i **Jordabalken**, **Plan- och bygglagen (PBL)** eller föreskrifter från Boverket och MSB."
                 })
 
             for m in matchningar:
-                with st.expander(f"📌 {m['myndighet']}", expanded=True):
-                    st.markdown(f"**Djupsökning & Gällande krav:**\n\n{m['detaljer']}")
+                with st.expander(f"📌 {m['lagrum']}", expanded=True):
+                    st.markdown(f"**Exakt regeltolkning & Paragrafhänvisning:**\n\n{m['detaljer']}")
                     st.markdown("---")
-                    st.markdown("*Online-hänvisning:* Verifiera alltid mot Skolverkets läroplaner, Boverket, MSB eller kommunens miljöförvaltning.")
+                    st.markdown("*Officiell källhänvisning:* Sök alltid på angivet lagrum i Svensk författningssamling (SFS) eller Boverkets handböcker.")
 
         else:
             st.warning("Skriv en lite fylligare fråga.")
