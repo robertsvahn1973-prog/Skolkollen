@@ -6,16 +6,14 @@ st.set_page_config(
     layout="centered"
 )
 
-st.title("🏫 Skol- och Lokalkoll Pro (Fastighet & Ombyggnad)")
-st.markdown("Din kompletta mobila assistent för BBR, OVK, kapacitet, ombyggnationer och regeltolkning.")
+st.title("🏫 Skol- och Lokalkoll Pro")
+st.markdown("Din mobila assistent för kapacitetsberäkning, BBR och intelligent djuptolkning av regelverk för skolmiljö.")
 
 meny = st.radio(
     "Välj funktion:", 
     [
         "1. Kapacitet & Vent-koll (BBR)", 
-        "2. Ombyggnad & Fritextkalkylator", 
-        "3. BBR & Regelverk Uppslagsverk", 
-        "4. Intelligent Fritextsök (Lagkoppling)"
+        "2. Intelligent Fritextsök & Djuptolk"
     ]
 )
 
@@ -62,122 +60,88 @@ if meny == "1. Kapacitet & Vent-koll (BBR)":
             st.error("❌ Trängselrisk")
 
 # ==========================================
-# DEL 2: OMBYGGNAD & FRITEXTKALKYLATOR
+# DEL 2: INTELLIGENT FRITEXTSÖK & DJUPTOLK
 # ==========================================
-elif meny == "2. Ombyggnad & Fritextkalkylator":
-    st.header("🛠️ Fritextkalkylator för ombyggnation")
-    st.markdown("Beskriv projektet i fritext. Appen känner av om det är dörrbyte (inga relationshandlingar krävs) eller rumsbygge/väggflytt (kräver uppdatering av brand-, vent- och bygghandlingar).")
+elif meny == "2. Intelligent Fritextsök & Djuptolk":
+    st.header("🔍 Intelligent Fritextsök & Djuptolk")
+    st.markdown("Ställ en specifik fråga om slöjd, NO/kemi, idrott, dörrar, decibel, takhöjd, ventilation eller brand. Systemet djupsöker mot Skolverket, Boverket, MSB och Miljöförvaltningen:")
 
-    projekt_beskrivning = st.text_area(
-        "Beskriv projektet:",
-        placeholder="T.ex. 'Byta 4 st klassrumsdörrar' eller 'Bygga nya rum och flytta väggar'..."
-    )
+    fritext = st.text_area("Din fråga (t.ex. 'vad ska slöjd i en skola innefatta' eller 'krav på kemisal'):")
 
-    st.divider()
-
-    txt = projekt_beskrivning.lower()
-    
-    # Detektera om det är dörrbyte eller nya rum/väggar
-    ar_dorrbyte = any(w in txt for w in ["dörr", "dörrar", "port"])
-    ar_nytt_rum = any(w in txt for w in ["nytt rum", "nya rum", "vägg", "väggar", "flytta", "rivar", "planlösning"])
-
-    if ar_dorrbyte:
-        kategori_vald = "Byte av innerdörr(ar) med brand-/ljudkrav"
-        grund_matris = 18000 * 4 if "4" in txt else 18000 * 2  # Schablon per dörr
-        krav_relationshandlingar = False  # Behövs ej vid rent dörrbyte
-    elif ar_nytt_rum:
-        kategori_vald = "Bygga nya rum / Väggflytt / Planlösning"
-        grund_matris = 3500 * 40  # Schablon för rumsbygge per m2
-        krav_relationshandlingar = True   # Krävs ovillkorligen
-    elif any(w in txt for w in ["sand", "sandlåda", "lekplats"]):
-        kategori_vald = "Lekplats / Sandlåda (påfyllnad & sanering)"
-        grund_matris = 2500 * 5
-        krav_relationshandlingar = False
-    else:
-        kategori_vald = "Generell lokalåtgärd"
-        grund_matris = 20000
-        krav_relationshandlingar = False
-
-    st.info(f"🔍 **Tolkat projekt:** {kategori_vald}")
-
-    # Prissättning av relationshandlingar baserat på projektart
-    if krav_relationshandlingar:
-        st.warning("📁 **Notering:** Eftersom projektet berör rumsindelning/väggar krävs uppdaterade relationshandlingar för ventilation (OVK-rev), brandtekniska ritningar och bygghandlingar.")
-        kostnad_relationshandlingar = 7500  # Omfattande handlingar för nya rum
-    else:
-        st.success("✅ **Notering:** Vid rent dörrbyte eller underhåll behövs inga uppdaterade relationshandlingar.")
-        kostnad_relationshandlingar = 0
-
-    projektering_ovrigt = grund_matris * 0.10  # Samordning
-    total_kostnad = grund_matris + kostnad_relationshandlingar + projektering_ovrigt
-
-    st.subheader("💰 Kostnadssammanställning (Induktiv riktprisbudget):")
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        st.metric("Direkt arb./material", f"{grund_matris:,.0f} kr".replace(",", " "))
-        st.write(f"📁 **Relationshandlingar:** {kostnad_relationshandlingar:,.0f} kr".replace(",", " "))
-    with col2:
-        st.metric("Uppskattat totalpris", f"{total_kostnad:,.0f} kr".replace(",", " "))
-        st.caption("Inkl. schablon och samordning.")
-
-# ==========================================
-# DEL 3: UPPSLAGSVERK
-# ==========================================
-elif meny == "3. BBR & Regelverk Uppslagsverk":
-    st.header("📚 Snabbreferens för BBR & Fastighetskrav")
-    st.markdown("Här hittar du svar gällande takhöjd, flöden och ansvar.")
-
-# ==========================================
-# DEL 4: INTELLIGENT FRITEXTSÖK (LAGKOPPLING)
-# ==========================================
-elif meny == "4. Intelligent Fritextsök (Lagkoppling)":
-    st.header("🔍 Intelligent Fritextsök & Regeltolk")
-    st.markdown("Ställ en specifik fråga (t.ex. *'vad är lägsta takhöjd i en skola'*, *'brandskydd utöver bbr'* eller *'ventilation'**):")
-
-    fritext = st.text_area("Din fråga eller beskrivning av ärendet:")
-
-    if st.button("Analysera och koppla krav"):
-        if len(fritext) > 3:
+    if st.button("Utför djupsökning och analys"):
+        if len(fritext) > 2:
             s_text = fritext.lower()
-            st.success("Analys klar! Exakt koppling till gällande regelverk och myndigheter:")
+            st.success("Djupsökning klar! Matchade myndigheter och krav:")
 
             matchningar = []
 
-            if any(w in s_text for w in ["takhöjd", "rumshöjd", "höjd", "yta", "m2", "kvadratmeter", "fri höjd"]):
+            # Slöjd (Trä, metall, textil) -> Skolverket & Arbetsmiljöverket & BBR
+            if any(w in s_text for w in ["slöjd", "träslöjd", "metallslöjd", "textilslöjd"]):
                 matchningar.append({
-                    "lag": "Boverkets Byggregler (BBR) / Boverket",
-                    "fokus": "Reglerar rumshöjder, volymer och utformning av vistelserum. För skolor rekommenderas en fri takhöjd på minst 2,4 - 2,7 meter."
+                    "myndighet": "Skolverket (Läroplan / Skollagen) & Arbetsmiljöverket / Boverket",
+                    "detaljer": "Enligt Skolverkets kursplaner ska slöjdundervisningen erbjuda ändamålsenliga lokaler för både trä-, metall- och textilslöjd. Fastighets- och arbetsmiljökrav (AFS) ställer krav på: **Utsug och ventilation** för damm och ångor (särskilt vid maskiner och svets/lödning), **säkerhetsavstängning** (nödstopp för maskiner), ögonspolning, samt flamskyddade material och robusta ytskikt som tål tuff miljö och buller."
                 })
 
-            if any(w in s_text for w in ["luft", "ventilation", "koldioxid", "flöde", "ovk", "l/s", "drag"]):
+            # NO / Kemi -> Skolverket & Miljöförvaltningen & MSB
+            if any(w in s_text for w in ["kemi", "no", "laborator", "dragskåp", "kemikalie"]):
                 matchningar.append({
-                    "lag": "BBR & Miljöbalken (Miljöförvaltningen)",
-                    "fokus": "Ställer tekniska krav på lägsta uteluftsflöden (minst 0,35 l/s per m² + 7 l/s per person). Miljöförvaltningen utövar tillsyn över innemiljön."
+                    "myndighet": "Skolverket, Miljöförvaltningen & MSB (Räddningstjänsten)",
+                    "detaljer": "NO- och kemisalar ställer höga krav på lokalens utformning: **Dragskåp** med godkänd kontroll, särskilda kemikalieskåp med ventilation, flamsäkra ytor, golvbrunnar med slam-/syraavskiljare, samt snabbdusch och ögonspolning. Miljöförvaltningen och räddningstjänsten utövar tillsyn över förvaring av brandfarlig och hälsofarlig vara."
                 })
 
-            if any(w in s_text for w in ["brand", "brandskydd", "utrymning", "brandcell", "utrymningsväg", "sprinkler", "brandlarm", "branddörr"]):
+            # Idrott -> Skolverket & BBR
+            if any(w in s_text for w in ["idrott", "gymnastik", "hall", "omklädning"]):
                 matchningar.append({
-                    "lag": "Lagen om skydd mot olyckor (MSO) & MSB / Räddningstjänsten",
-                    "fokus": "Utöver BBR:s grundläggande brandkrav ställer Räddningstjänsten krav på systematiskt brandskyddsarbete (SBA) och fria utrymningsvägar."
+                    "myndighet": "Skolverket & Boverkets Byggregler (BBR)",
+                    "detaljer": "Idrottshallar regleras utifrån Skolverkets krav på idrott och hälsa samt BBR för stora samlingslokaler. Viktiga parametrar är **takhöjd** (ofta minst 7 meter för bollsport), slagtåliga väggar, korrekt belysning, tillräcklig ventilation för ansträngande fysisk aktivitet samt funktionella omklädningsrum med våtrumskrav och god kapacitet på duschar."
                 })
 
-            if any(w in s_text for w in ["skollag", "skolverket", "trygghet", "studiero", "elev", "förskola", "skola"]):
+            # Ljud och Decibel på dörrar -> BBR & Miljöbalken
+            if any(w in s_text for w in ["decibel", "db", "ljud", "ljudklass", "buller", "akustik", "dörr"]):
                 matchningar.append({
-                    "lag": "Skollagen (2010:800) / Skolverket",
-                    "fokus": "Reglerar verksamhetens ansvar för att lokaler är ändamålsenliga och att elever garanteras en trygg och säker skolmiljö."
+                    "myndighet": "Boverket (BBR) & Miljöförvaltningen (Miljöbalken)",
+                    "detaljer": "För dörrar till klassrum och undervisningslokaler ställs krav på ljudreduktion för att uppfylla BBR:s ljudklasskrav (normalt ljudklass B eller C). Klassrumsdörrar har typiskt krav på ljudreduktion **Rw 35 dB** (eller upp till Rw 40 dB mot högljudda utrymmen). Miljöbalken kräver att ekvivalenta ljudnivåer i klassrum inte överskrider riktvärden (max 30-35 dB(A))."
+                })
+
+            # Takhöjd -> Boverket
+            if any(w in s_text for w in ["takhöjd", "rumshöjd", "höjd", "yta", "m2", "volym"]):
+                matchningar.append({
+                    "myndighet": "Boverkets Byggregler (BBR) / Boverket",
+                    "detaljer": "Reglerar rumshöjder i skolor och förskolor. För vistelserum i skolor rekommenderas en fri takhöjd på minst **2,4 till 2,7 meter** (och betydligt högre för idrottshallar) för att säkerställa god luftvolym och rumsmiljö."
+                })
+
+            # Ventilation -> BBR & Miljöförvaltningen
+            if any(w in s_text for w in ["luft", "ventilation", "koldioxid", "flöde", "ovk", "l/s"]):
+                matchningar.append({
+                    "myndighet": "Boverket (BBR) & Miljöförvaltningen (Miljöbalken 9 kap.)",
+                    "detaljer": "Kräver lägsta uteluftsflöde om **0,35 l/s per m²** golvarea plus tillägg med **7,0 l/s per person** i standardlokaler (särskilda flöden kan krävas i slöjd och kemi)."
+                })
+
+            # Brandskydd -> MSB & Räddningstjänsten
+            if any(w in s_text for w in ["brand", "brandskydd", "utrymning", "brandcell", "branddörr", "sba"]):
+                matchningar.append({
+                    "myndighet": "MSB & Lokala Räddningstjänsten (Lagen om skydd mot olyckor)",
+                    "detaljer": "Utöver BBR:s byggnadstekniska brandkrav (t.ex. brandklassade dörrar som **EI30 / EI60**) ställer Räddningstjänsten operativa krav på utrymningsvägar, fria bredder och systematiskt brandskyddsarbete (SBA)."
+                })
+
+            # Skola / Trygghet / Generellt -> Skolverket & Skollagen
+            if any(w in s_text for w in ["skollag", "skolverket", "trygghet", "elev", "förskola", "skola", "lokal"]):
+                matchningar.append({
+                    "myndighet": "Skolverket (Skollagen 2010:800)",
+                    "detaljer": "Ställer övergripande krav på att skollokaler är ändamålsenliga för verksamheten, att läroplanens praktiska ämnen kan genomföras fullt ut, samt att miljön är trygg och säker för elever och personal."
                 })
 
             if not matchningar:
                 matchningar.append({
-                    "lag": "Allmän fastighets- och myndighetsbedömning",
-                    "fokus": "Frågan rör fastighetsförvaltning. Specificera om det avser ventilation, brand eller utformning."
+                    "myndighet": "Allmän fastighetsförvaltning & Skolverket",
+                    "detaljer": "Ställ en mer specifik fråga (t.ex. om slöjd, kemisal, idrott, dörrar, flöden eller takhöjd) för att få exakta regelspecifikationer."
                 })
 
             for m in matchningar:
-                with st.expander(f"📌 Ansvarig myndighet & Regelverk: {m['lag']}", expanded=True):
-                    st.write(f"**Kravbild & Innehåll:** {m['fokus']}")
-                    st.markdown("- *Online-hänvisning:* Kontrollera alltid Boverkets, Skolverkets eller lokal miljö-/räddningsförvaltningens gällande föreskrifter.")
+                with st.expander(f"📌 {m['myndighet']}", expanded=True):
+                    st.markdown(f"**Djupsökning & Gällande krav:**\n\n{m['detaljer']}")
+                    st.markdown("---")
+                    st.markdown("*Online-hänvisning:* Verifiera alltid mot Skolverkets läroplaner, Boverket, MSB eller kommunens miljöförvaltning.")
 
         else:
             st.warning("Skriv en lite fylligare fråga.")
