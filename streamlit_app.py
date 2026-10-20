@@ -138,28 +138,29 @@ elif meny == "4. Intelligent Fritextsök (Lagkoppling)":
             s_text = fritext.lower()
             st.success("Analys klar! Koppling till gällande lagar och myndigheter:")
 
-            # Regelmotor som matchar fritext mot BBR, Miljöbalken och Skollagen
             matchningar = []
 
-            if any(ord in s_text for "luft", "ventilation", "koldioxid", "flöde", "ovk", "takhöjd", "volym", "rumshöjd"):
+            ord_luft = ["luft", "ventilation", "koldioxid", "flöde", "ovk", "takhöjd", "volym", "rumshöjd"]
+            if any(w in s_text for w in ord_luft):
                 matchningar.append({
                     "lag": "Boverkets Byggregler (BBR)",
                     "fokus": "Byggnadstekniska krav på innemiljö, uteluftsflöden (minst 0,35 l/s m² + 7 l/s per person) och rumshöjder."
                 })
 
-            if any(ord in s_text for "miljö", "hälsa", "buller", "ljud", "temperatur", "drag", "mögel", "fukt", "allergi", "städa", "renlighet"):
+            ord_miljö = ["miljö", "hälsa", "buller", "ljud", "temperatur", "drag", "mögel", "fukt", "allergi", "städa", "renlighet"]
+            if any(w in s_text for w in ord_miljö):
                 matchningar.append({
                     "lag": "Miljöbalken (9 kap. - Hälsoskydd)",
-                    "fokus": "Tillsyneras av Miljöförvaltningen. Kräver att skollokaler inte medför olägenhet för människors hälsa (ljudnivåer, termiskt anpassat inneklimat och ventilation)."
+                    "fokus": "Tillsynas av Miljöförvaltningen. Kräver att skollokaler inte medför olägenhet för människors hälsa (ljudnivåer, termiskt anpassat inneklimat och ventilation)."
                 })
 
-            if any(ord in s_text for "trygg", "säkerhet", "kränkning", "ansvar", "skolmiljö", "elev", "förskola"):
+            ord_skol = ["trygg", "säkerhet", "kränkning", "ansvar", "skolmiljö", "elev", "förskola"]
+            if any(w in s_text for w in ord_skol):
                 matchningar.append({
                     "lag": "Skollagen (2010:800 - 4 kap.)",
                     "fokus": "Ställer krav på att utbildningen bedrivs i en trygg miljö och att lokaler är ändamålsenliga för verksamheten."
                 })
 
-            # Om inga specifika nyckelord hittas, ge en generell heltäckande träff
             if not matchningar:
                 matchningar.append({
                     "lag": "Samlad bedömning (BBR, Miljöbalken & Skollagen)",
